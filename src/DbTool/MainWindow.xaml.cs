@@ -147,17 +147,24 @@ namespace DbTool
                 {
                     return;
                 }
-                foreach (var item in CheckedTables.SelectedItems)
+                try
                 {
-                    if (item is TableEntity table)
+                    foreach (var item in CheckedTables.SelectedItems)
                     {
-                        var modelCode = codeGenerator.GenerateModelCode(table, options, _dbProviderFactory.GetDbProvider(_dbHelper?.DbType ?? _settings.DefaultDbType));
-                        var path = Path.Combine(dir, $"{(_settings.ApplyNameConverter ? _modelNameConverter.ConvertTableToModel(table.TableName ?? "") : table.TableName)}{codeGenerator.FileExtension}");
-                        File.WriteAllText(path, modelCode, Encoding.UTF8);
+                        if (item is TableEntity table)
+                        {
+                            var modelCode = codeGenerator.GenerateModelCode(table, options, _dbProviderFactory.GetDbProvider(_dbHelper?.DbType ?? _settings.DefaultDbType));
+                            var path = Path.Combine(dir, $"{(_settings.ApplyNameConverter ? _modelNameConverter.ConvertTableToModel(table.TableName ?? "") : table.TableName)}{codeGenerator.FileExtension}");
+                            File.WriteAllText(path, modelCode, Encoding.UTF8);
+                        }
                     }
+                    // open dir
+                    Process.Start("Explorer.exe", dir);
                 }
-                // open dir
-                Process.Start("Explorer.exe", dir);
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"发现异常，详细信息:{ex.Message}，请检查表的字段类型是否正确");
+                }
             }
         }
 
