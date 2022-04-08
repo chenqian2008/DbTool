@@ -50,96 +50,115 @@ namespace DbTool.Core
             sbText.AppendLine($"\tpublic class {options.Prefix}{_modelNameConverter.ConvertTableToModel(tableEntity.TableName)}{options.Suffix}");
             sbText.AppendLine("\t{");
             var index = 0;
-            if (options.GeneratePrivateFields)
+            try
             {
-                foreach (var item in tableEntity.Columns)
+                if (options.GeneratePrivateFields)
                 {
-                    if (index > 0)
+                    foreach (var item in tableEntity.Columns)
                     {
-                        sbText.AppendLine();
-                    }
-                    else
-                    {
-                        index++;
-                    }
-                    var fclType = dbProvider.DbType2ClrType(item.DataType, item.IsNullable);
-
-                    var tmpColName = ToPrivateFieldName(item.ColumnName);
-                    sbText.AppendLine($"\t\tprivate {fclType} {tmpColName};");
-                    if (options.GenerateDataAnnotation)
-                    {
-                        if (!string.IsNullOrEmpty(item.ColumnDescription))
+                        //过滤已删除的字段
+                        if (item.ColumnName.Contains("pg.dropped") && item.DataType == null)
                         {
-                            sbText.AppendLine(
-                                $"\t\t/// <summary>{Environment.NewLine}\t\t/// {item.ColumnDescription.Replace(Environment.NewLine, " ")}{Environment.NewLine}\t\t/// </summary>");
-                            if (options.GenerateDataAnnotation)
-                            {
-                                sbText.AppendLine($"\t\t[Description(\"{item.ColumnDescription.Replace(Environment.NewLine, " ")}\")]");
-                            }
+                            continue;
+                        }
+                        if (index > 0)
+                        {
+                            sbText.AppendLine();
                         }
                         else
                         {
+                            index++;
+                        }
+                        var fclType = dbProvider.DbType2ClrType(item.DataType, item.IsNullable);
+
+                        var tmpColName = ToPrivateFieldName(item.ColumnName);
+                        sbText.AppendLine($"\t\tprivate {fclType} {tmpColName};");
+                        if (options.GenerateDataAnnotation)
+                        {
+                            if (!string.IsNullOrEmpty(item.ColumnDescription))
+                            {
+                                sbText.AppendLine(
+                                    $"\t\t/// <summary>{Environment.NewLine}\t\t/// {item.ColumnDescription.Replace(Environment.NewLine, " ")}{Environment.NewLine}\t\t/// </summary>");
+                                if (options.GenerateDataAnnotation)
+                                {
+                                    sbText.AppendLine($"\t\t[Description(\"{item.ColumnDescription.Replace(Environment.NewLine, " ")}\")]");
+                                }
+                            }
+                            else
+                            {
+                                if (item.IsPrimaryKey)
+                                {
+                                    sbText.AppendLine($"\t\t[Description(\"主键\")]");
+                                }
+                            }
                             if (item.IsPrimaryKey)
                             {
-                                sbText.AppendLine($"\t\t[Description(\"主键\")]");
+                                sbText.AppendLine($"\t\t[Key]");
                             }
+                            if (fclType == "string" && item.Size > 0 && item.Size < int.MaxValue)
+                            {
+                                sbText.AppendLine($"\t\t[StringLength({item.Size})]");
+                            }
+                            sbText.AppendLine($"\t\t[Column(\"{item.ColumnName}\")]");
                         }
-                        if (item.IsPrimaryKey)
-                        {
-                            sbText.AppendLine($"\t\t[Key]");
-                        }
-                        if (fclType == "string" && item.Size > 0 && item.Size < int.MaxValue)
-                        {
-                            sbText.AppendLine($"\t\t[StringLength({item.Size})]");
-                        }
-                        sbText.AppendLine($"\t\t[Column(\"{item.ColumnName}\")]");
-                    }
-                    sbText.AppendLine($"\t\tpublic {fclType} {item.ColumnName}");
-                    sbText.AppendLine("\t\t{");
-                    sbText.AppendLine($"\t\t\tget {{ return {tmpColName}; }}");
-                    sbText.AppendLine($"\t\t\tset {{ {tmpColName} = value; }}");
-                    sbText.AppendLine("\t\t}");
-                    sbText.AppendLine();
-                }
-            }
-            else
-            {
-                foreach (var item in tableEntity.Columns)
-                {
-                    if (index > 0)
-                    {
+                        sbText.AppendLine($"\t\tpublic {fclType} {item.ColumnName}");
+                        sbText.AppendLine("\t\t{");
+                        sbText.AppendLine($"\t\t\tget {{ return {tmpColName}; }}");
+                        sbText.AppendLine($"\t\t\tset {{ {tmpColName} = value; }}");
+                        sbText.AppendLine("\t\t}");
                         sbText.AppendLine();
                     }
-                    else
+                }
+                else
+                {
+                    foreach (var item in tableEntity.Columns)
                     {
-                        index++;
-                    }
-                    var fclType = dbProvider.DbType2ClrType(item.DataType, item.IsNullable);
+                        //过滤已删除的字段
+                        if (item.ColumnName.Contains("pg.dropped") && item.DataType == null)
+                        {
+                            continue;
+                        }
+                        if (index > 0)
+                        {
+                            sbText.AppendLine();
+                        }
+                        else
+                        {
+                            index++;
+                        }
+                        var fclType = dbProvider.DbType2ClrType(item.DataType, item.IsNullable);
 
-                    if (options.GenerateDataAnnotation)
-                    {
-                        if (!string.IsNullOrEmpty(item.ColumnDescription))
+                        if (options.GenerateDataAnnotation)
                         {
-                            sbText.AppendLine(
-                                $"\t\t/// <summary>{Environment.NewLine}\t\t/// {item.ColumnDescription.Replace(Environment.NewLine, " ")}{Environment.NewLine}\t\t/// </summary>");
-                            if (options.GenerateDataAnnotation)
+                            if (!string.IsNullOrEmpty(item.ColumnDescription))
                             {
-                                sbText.AppendLine($"\t\t[Description(\"{item.ColumnDescription.Replace(Environment.NewLine, " ")}\")]");
+                                sbText.AppendLine(
+                                    $"\t\t/// <summary>{Environment.NewLine}\t\t/// {item.ColumnDescription.Replace(Environment.NewLine, " ")}{Environment.NewLine}\t\t/// </summary>");
+                                if (options.GenerateDataAnnotation)
+                                {
+                                    sbText.AppendLine($"\t\t[Description(\"{item.ColumnDescription.Replace(Environment.NewLine, " ")}\")]");
+                                }
                             }
+                            if (item.IsPrimaryKey)
+                            {
+                                sbText.AppendLine($"\t\t[Key]");
+                            }
+                            if (fclType == "string" && item.Size > 0 && item.Size < int.MaxValue)
+                            {
+                                sbText.AppendLine($"\t\t[StringLength({item.Size})]");
+                            }
+                            sbText.AppendLine($"\t\t[Column(\"{item.ColumnName}\")]");
                         }
-                        if (item.IsPrimaryKey)
-                        {
-                            sbText.AppendLine($"\t\t[Key]");
-                        }
-                        if (fclType == "string" && item.Size > 0 && item.Size < int.MaxValue)
-                        {
-                            sbText.AppendLine($"\t\t[StringLength({item.Size})]");
-                        }
-                        sbText.AppendLine($"\t\t[Column(\"{item.ColumnName}\")]");
+                        sbText.AppendLine($"\t\tpublic {fclType} {item.ColumnName} {{ get; set; }}");
                     }
-                    sbText.AppendLine($"\t\tpublic {fclType} {item.ColumnName} {{ get; set; }}");
                 }
             }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
             sbText.AppendLine("\t}");
             sbText.AppendLine("}");
             return sbText.ToString();

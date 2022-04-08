@@ -6,6 +6,9 @@
     <Description>
       DbTool core defined interface for extensions
     </Description>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyVersion>1.6.0.0</AssemblyVersion>
+    <FileVersion>1.6.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="Resources.Designer.cs">
