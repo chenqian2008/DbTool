@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>DbTool.DbProvider.PostgreSql</RootNamespace>
+    <AssemblyName>DbTool.DbProvider.PostgreSql</AssemblyName>
+    <Description>
+      DbTool PostgreSql DbProvider
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DbTool.Core\DbTool.Core.csproj" />
+    <PackageReference Include="Npgsql" Version="6.0.1" />
+  </ItemGroup>
+
+</Project>
